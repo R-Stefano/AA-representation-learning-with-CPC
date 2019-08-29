@@ -1,7 +1,6 @@
 import tensorflow as tf
 import numpy as np
 import yaml
-import utils
 import sys
 
 with open('../../hyperparams.yml', 'r') as f:
@@ -9,14 +8,15 @@ with open('../../hyperparams.yml', 'r') as f:
 
 sys.path.append(hyperparams['shared_scripts'])
 import modelGenerator as modelGen
+import utils
 
 project_dir=hyperparams['project_dir']
 data_dir=hyperparams['data_dir']
 seed=hyperparams['seed']
 
 np.random.seed(seed)
-train_dataset=np.load(data_dir+'train_dataset.npy', allow_pickle=True)[:4]
-test_dataset=np.load(data_dir+'test_dataset.npy', allow_pickle=True)[:4]
+train_dataset=np.load(data_dir+'train_dataset.npy', allow_pickle=True)
+test_dataset=np.load(data_dir+'test_dataset.npy', allow_pickle=True)
 
 sequence_aa=hyperparams['max_sequence_length']
 
