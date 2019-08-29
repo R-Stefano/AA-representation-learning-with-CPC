@@ -1,0 +1,27 @@
+project_dir: '/home/steve/Desktop/projects/noname/ares_project/'
+data_dir: '/home/steve/Desktop/projects/noname/ares_project/data/'
+shared_scripts: '/home/steve/Desktop/projects/noname/ares_project/scripts/shared/'
+seed: 
+aminos: [A, D, T, I, V, E, L, Y, P, N, G, S, H, K, R, W, M, Q, F, C, X, B, U, Z, O]
+max_sequence_length: 1078
+min_sequence_length: 0
+training: {
+  test_size: 0.22,
+  epochs: 1,
+  batch_size: 2,
+  learning_rate: 0.001
+}
+prepare_batch: {
+  stride: 8,
+  padding: 0,
+  window_size: 62,
+}
+CPC: {
+  input_sequence_length: 128,
+  num_samples: 6,
+  num_samples_pos: 1,
+  encoding_size: 1,
+  code_size: 128,
+  rnn_units: 256,
+  num_pred_terms: 4,
+}
