@@ -63,27 +63,32 @@ def CPCModel(sequence_length, num_predic_terms, num_samples, window_size, encodi
     #encoder_model.summary()
     #predictor_model.summary()
 
-    ##Model input
-    x_input = layers.Input((sequence_length, window_size, encoding_length))
-    #encode
-    x_encoded = layers.TimeDistributed(encoder_model)(x_input) #batch, timesteps, code_size
-    #RNN
-    autoregressive_output=autoregressive_model(x_encoded) #batch, timesteps, rnn_units
-    #Predict next N embeddings at each timestep
-    preds = layers.TimeDistributed(predictor_model)(autoregressive_output) #batch, timesteps, num_preds, code_size
+    ##Process Input Data
+    x_input = layers.Input((sequence_length, window_size, encoding_length), name='encoder_input')
+    #1. Encoder (CNN)
+    x_reshaped=tf.reshape(x_input, (-1, window_size, encoding_length))#batch*timesteps, window_size, encoding_length
+    #x_encoded = layers.TimeDistributed(encoder_model)(x_input) #batch, timesteps, code_size
+    x_encoded=encoder_model(x_reshaped)#batch*timesteps, code_size
+    x_encoded=tf.reshape(x_encoded, (-1, sequence_length, code_size))#batch, timesteps, code_size
+    #2. Autoregressor (RNN)
+    rnn_output=autoregressive_model(x_encoded) #batch, timesteps, rnn_units
+    rnn_output=tf.reshape(rnn_output, (-1, rnn_units))
+    #3. Predictor (Dense): Predict next N embeddings at each timestep
+    #preds = layers.TimeDistributed(predictor_model)(autoregressive_output) #batch, timesteps, num_preds, code_size
+    preds=predictor_model(rnn_output) # batch*timesteps*num_preds, code_size
 
-    ##Next embeddings input (real & fake)
-    y_input=layers.Input((sequence_length, num_predic_terms, num_samples, window_size, encoding_length))
-    #Reshape to feed into encoder
-    y_reshaped=tf.reshape(y_input, (-1, sequence_length*num_predic_terms*num_samples, window_size, encoding_length)) #batch, timesteps, vector_window, code_size
-    #encode
-    y_encoded=layers.TimeDistributed(encoder_model)(y_reshaped) #batch, timesteps * num_preds*num_samples, code_size
+    ##Process next embeddings input (real & fake)
+    y_input=layers.Input((sequence_length, num_predic_terms, num_samples, window_size, encoding_length), name='encoder_input_target')
+    #1. Encode
+    y_reshaped=tf.reshape(y_input, (-1, window_size, encoding_length)) #batch*timesteps*samples, vector_window, code_size
+    #y_reshaped=tf.reshape(y_input, (-1, sequence_length*num_predic_terms*num_samples, window_size, encoding_length)) #batch, timesteps, vector_window, code_size
+    y_encoded=encoder_model(y_reshaped) #batch*timesteps*num_preds*num_samples, code_size
+
 
     #Reshape preds
     pred_embeds=tf.reshape(preds, (-1, sequence_length, num_predic_terms, 1, code_size))
     #Reshape target embeds
     target_embeds=tf.reshape(y_encoded, (-1, sequence_length, num_predic_terms, num_samples, code_size)) #batch, timesteps, num_preds, num_samples, code_size
-
 
     #Compute loss
     dot_product=tf.math.reduce_sum(pred_embeds*target_embeds, axis=-1) #batch, timesteps, num_preds, samples

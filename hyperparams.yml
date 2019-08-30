@@ -12,13 +12,13 @@ training: {
   learning_rate: 0.001
 }
 prepare_batch: {
-  stride: 8,
-  padding: 0,
-  window_size: 62,
+  stride: 34,
+  padding: 10,
+  window_size: 34,
 }
 CPC: {
-  input_sequence_length: 128,
-  num_samples: 6,
+  input_sequence_length: 32,
+  num_samples: 4,
   num_samples_pos: 1,
   encoding_size: 1,
   code_size: 128,

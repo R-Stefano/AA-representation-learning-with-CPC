@@ -27,3 +27,10 @@ rnn_units=hyperparams['CPC']['rnn_units']
 model=modelGen.CPCModel(sequence_length, num_predic_terms, num_samples, window_size, encoding_length, code_size, rnn_units, learning_rate)
 model.load_weights(data_dir+'cpc_weights.h5')
 model.summary()
+
+rnn_output=tf.keras.Model(
+    inputs=model.input,
+    outputs=model.get_layer('rnn').output
+)
+
+print(rnn_output)
