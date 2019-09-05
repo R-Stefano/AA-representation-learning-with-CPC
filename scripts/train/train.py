@@ -10,6 +10,19 @@ sys.path.append(hyperparams['shared_scripts'])
 import cpc as cpc_model
 import utils
 
+#Check if GPU available
+print('\n-----------\n')
+if hyperparams['GPU']:
+    device_name = tf.test.gpu_device_name()
+    if not tf.test.is_gpu_available():
+        raise SystemError('GPU device not found')
+    else:
+        print('Found GPU at: {}'.format(device_name))
+else:
+    print('Using CPU')
+print('\n-----------\n')
+    
+
 project_dir=hyperparams['project_dir']
 data_dir=hyperparams['data_dir']
 seed=hyperparams['seed']
@@ -44,9 +57,9 @@ log_dir=model_dir+'logs/'
 
 model.fit_generator(
     generator=utils.prepareBatch(train_dataset),
-    steps_per_epoch=5,#((len(train_dataset)//batch_size)+1),
+    steps_per_epoch=((len(train_dataset)//batch_size)+1),
     validation_data=utils.prepareBatch(test_dataset),
-    validation_steps=5,#((len(test_dataset)//batch_size)+1),
+    validation_steps=((len(test_dataset)//batch_size)+1),
     epochs=epochs,
     callbacks=[tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1, profile_batch = 1)]
 )
