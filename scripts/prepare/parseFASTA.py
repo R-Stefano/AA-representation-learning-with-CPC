@@ -8,16 +8,17 @@ in string format is extracted and saved on disk.
 This file creates and save protein sequences like:
 sequences=[seq1, seq2]
 '''
-
 from Bio import SeqIO
 import pickle
+import yaml
 
-url = 'https://www.uniprot.org/uploadlists/'
+with open('../../hyperparams.yml', 'r') as f:
+    hyperparams=yaml.load(f)
 
 rawFilename='uniref_100.fasta'
 sequences=[]
 
-for idx, record in enumerate(SeqIO.parse(rawFilename, "fasta")):
+for idx, record in enumerate(SeqIO.parse(hyperparams['data_dir']+rawFilename, "fasta")):
     aa_sequence=str(record.seq)
 
     sequences.append(aa_sequence)

@@ -1,7 +1,8 @@
 project_dir: '/home/steve/Desktop/projects/noname/ares_project/'
 data_dir: '/home/steve/Desktop/projects/noname/ares_project/data/'
+models_dir: '/home/steve/Desktop/projects/noname/ares_project/data/models/'
 shared_scripts: '/home/steve/Desktop/projects/noname/ares_project/scripts/shared/'
-seed: 
+seed: 46282
 aminos: [A, D, T, I, V, E, L, Y, P, N, G, S, H, K, R, W, M, Q, F, C, X, B, U, Z, O]
 max_sequence_length: 1078
 min_sequence_length: 0
@@ -9,7 +10,7 @@ training: {
   test_size: 0.22,
   epochs: 1,
   batch_size: 2,
-  learning_rate: 0.001
+  learning_rate: 0.1
 }
 prepare_batch: {
   stride: 34,

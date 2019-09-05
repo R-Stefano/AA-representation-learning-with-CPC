@@ -1,7 +1,7 @@
 import tensorflow as tf
 import yaml
 import sys
-
+import numpy as np
 with open('../hyperparams.yml', 'r') as f:
     hyperparams=yaml.load(f)
 
@@ -29,8 +29,10 @@ model.load_weights(data_dir+'cpc_weights.h5')
 model.summary()
 
 rnn_output=tf.keras.Model(
-    inputs=model.input,
+    inputs=model.get_layer('encoder_input').input,
     outputs=model.get_layer('rnn').output
 )
 
 print(rnn_output)
+
+print(rnn_output.predict(np.random.normal(size=(1, sequence_length, window_size,encoding_length))))

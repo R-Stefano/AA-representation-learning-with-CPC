@@ -7,7 +7,7 @@ with open('../../hyperparams.yml', 'r') as f:
     hyperparams=yaml.load(f)
 
 sys.path.append(hyperparams['shared_scripts'])
-import modelGenerator as modelGen
+import cpc as cpc_model
 import utils
 
 project_dir=hyperparams['project_dir']
@@ -36,14 +36,19 @@ encoding_length=hyperparams['CPC']['encoding_size'] #encoding_length=len(hyperpa
 code_size=hyperparams['CPC']['code_size'] #encoder output vector length
 rnn_units=hyperparams['CPC']['rnn_units']
 
-model=modelGen.CPCModel(sequence_length, num_predic_terms, num_samples, window_size, encoding_length, code_size, rnn_units, learning_rate)
+model_utils=cpc_model.Model()
+model=model_utils.architecture(sequence_length, num_predic_terms, num_samples, window_size, encoding_length, code_size, rnn_units, learning_rate)
+
+model_dir=hyperparams['models_dir']+model_utils.name
+log_dir=model_dir+'logs/'
 
 model.fit_generator(
     generator=utils.prepareBatch(train_dataset),
-    steps_per_epoch=((len(train_dataset)//batch_size)+1),
+    steps_per_epoch=5,#((len(train_dataset)//batch_size)+1),
     validation_data=utils.prepareBatch(test_dataset),
-    validation_steps=((len(test_dataset)//batch_size)+1),
-    epochs=epochs
+    validation_steps=5,#((len(test_dataset)//batch_size)+1),
+    epochs=epochs,
+    callbacks=[tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1, profile_batch = 1)]
 )
 
 model.save(data_dir+'cpc.h5')
