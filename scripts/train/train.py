@@ -55,16 +55,26 @@ model=model_utils.architecture(sequence_length, num_predic_terms, num_samples, w
 model_dir=hyperparams['models_dir']+model_utils.name
 log_dir=model_dir+'logs/'
 
+callbacks=[
+    tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1, profile_batch = 3),
+    tf.keras.callbacks.ModelCheckpoint(
+        filepath=model_dir+'model.{epoch:02d}-{val_loss:.2f}.hdf5' ,
+        monitor='val_custom_accuracy', 
+        load_weights_on_restart=True, 
+        save_best_only=True),
+    tf.keras.callbacks.EarlyStopping(monitor='val_custom_accuracy', patience=3)
+]
+
 model.fit_generator(
     generator=utils.prepareBatch(train_dataset),
     steps_per_epoch=((len(train_dataset)//batch_size)+1),
     validation_data=utils.prepareBatch(test_dataset),
     validation_steps=((len(test_dataset)//batch_size)+1),
     epochs=epochs,
-    callbacks=[tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1, profile_batch = 1)]
+    callbacks=callbacks,
+    verbose=1
 )
 
-model.save(data_dir+'cpc.h5')
-model.save_weights(data_dir+'cpc_weights.h5')
-#model.to_json()
+model.save(model_dir+'model.h5')
+model.save_weights(model_dir+'model_weights.h5')
 

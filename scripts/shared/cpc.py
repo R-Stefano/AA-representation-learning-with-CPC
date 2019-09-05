@@ -44,7 +44,7 @@ class Model():
 
         return predictor_model
 
-    def customLoss(self, labels, preds):
+    def custom_xent(self, labels, preds):
         labels=tf.cast(labels, tf.float32) #from int8 to float32
 
         loss=tf.keras.losses.categorical_crossentropy(
@@ -55,7 +55,7 @@ class Model():
         mean_loss=tf.math.reduce_mean(loss)
         return mean_loss
 
-    def customMetrics(self, y_true, y_pred):
+    def custom_accuracy(self, y_true, y_pred):
         y_true=tf.cast(y_true, tf.float32) #from int8 to float32
 
         true_idxs=tf.math.argmax(y_true, axis=-1)
@@ -111,8 +111,8 @@ class Model():
         # Compile model
         cpc_model.compile(
             optimizer=tf.keras.optimizers.Adam(lr=learning_rate),
-            loss=self.customLoss, #labels come as indexes, not as one hot vectors
-            metrics=[self.customMetrics]
+            loss=self.custom_xent, #labels come as indexes, not as one hot vectors
+            metrics=[self.custom_accuracy]
         )
         cpc_model.summary()
 

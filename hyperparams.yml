@@ -10,7 +10,7 @@ min_sequence_length: 0
 training: {
   test_size: 0.22,
   epochs: 10,
-  batch_size: 32,
+  batch_size: 64,
   learning_rate: 0.1
 }
 prepare_batch: {

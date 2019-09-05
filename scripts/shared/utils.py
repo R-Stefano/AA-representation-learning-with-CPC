@@ -29,7 +29,6 @@ def prepareBatch(dataset):
     '''
 
     while (True):
-        time_s=time.time()
         batch_idxs=np.random.choice(len(dataset), batch_size, replace=False)
         batch=dataset[batch_idxs]
 
@@ -82,5 +81,4 @@ def prepareBatch(dataset):
             labels[:, i, :, pos_idxs]=1
 
             targetData[:, i]=step_targetData[:, 0]
-        print('Preparing batch in {}s'.format(time.time()-time_s))
         yield [inputData, targetData], labels
