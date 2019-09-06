@@ -67,9 +67,9 @@ callbacks=[
 
 model.fit_generator(
     generator=utils.prepareBatch(train_dataset),
-    steps_per_epoch=((len(train_dataset)//batch_size)+1),
+    steps_per_epoch=len(train_dataset)//batch_size,
     validation_data=utils.prepareBatch(test_dataset),
-    validation_steps=((len(test_dataset)//batch_size)+1),
+    validation_steps=len(test_dataset)//batch_size,
     epochs=epochs,
     callbacks=callbacks,
     verbose=1

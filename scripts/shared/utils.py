@@ -27,21 +27,32 @@ def prepareBatch(dataset):
     -targetData: [batch_size, sequence_length, num_predic_terms, num_samples,  window_size, encoding_length]
     -labels: [batch_size, sequence_length, num_predic_terms, num_samples,  1 (index of correct target)]
     '''
+    batch_s=0
 
+    dataset_idxs=np.arange(len(dataset))
     while (True):
-        batch_idxs=np.random.choice(len(dataset), batch_size, replace=False)
-        batch=dataset[batch_idxs]
+        batch_e=batch_s+batch_size
+
+        data_idxs=dataset_idxs[batch_s:batch_e]
+        batch_data=dataset[data_idxs]
+        
+        if batch_e>=len(dataset):
+            batch_s=0
+            np.random.shuffle(dataset_idxs)
+        else:
+            batch_s=batch_e
 
         #1. batch encoding
         #batch_encoded=np.zeros((batch_size, sequence_aa, encoding_length))
         #batch_encoded[:, :, batch[:,:]]=1
-        batch_encoded=np.reshape(batch, (batch_size, sequence_aa, 1))
+        batch_encoded=np.reshape(batch_data, (batch_size, sequence_aa, 1))
 
         #2. generate input data
         #padding
         if padding>0:
             pads=np.zeros((batch_size, padding, 1), dtype=np.int8)-1
             batch_encoded=np.concatenate((batch_encoded, pads), axis=1)
+            
         inputData=np.zeros((batch_size, sequence_length, window_size, encoding_length), dtype=np.int8)-1
         for i in range(sequence_length):
             patch_start=i*stride
@@ -52,8 +63,15 @@ def prepareBatch(dataset):
         labels=np.zeros((batch_size, sequence_length, num_predic_terms, num_samples), dtype=np.int8)
         #3. generate target data & labels
         for i in range(sequence_length):
-            next_t=i
-            #1. Random patches (negative examples)
+            ###1. PREPARE LABELS
+            step_labels=np.reshape(labels[:, i], (-1, num_samples))# shape: (batch*preds, num_sample) easier to set ones
+            positive_idxs=np.random.randint(low=0, high=(num_samples), size=(batch_size*num_predic_terms)) #random pick example idx of positive examples
+            batch_idxs=np.arange(0, positive_idxs.shape[0])
+            step_labels[batch_idxs, positive_idxs]=1
+            labels[:, i]=np.reshape(step_labels, (batch_size, num_predic_terms, num_samples))
+
+            next_t=i+1
+            #2. Random patches (negative examples)
             #Create a mask to avoid sample the true target data
             mask=np.zeros((batch_size, sequence_length), dtype=np.int8)
             mask[:, next_t: next_t+num_predic_terms]=1
@@ -66,19 +84,18 @@ def prepareBatch(dataset):
             neg_idxs=neg_idxs[idxs]
             b=neg_idxs[:, 0]
             t=neg_idxs[:, 1]
-            step_targetData=np.reshape(inputData[b, t], (batch_size, 1, num_predic_terms, num_samples, window_size, encoding_length))
+            negative_target=np.reshape(inputData[b, t], (-1, num_samples, window_size, encoding_length))# (batch*num_predic_terms, window_size, encoding_length)
             
-            #2. True patch
-            pos_target=np.reshape(inputData[:, next_t: next_t+num_predic_terms], (batch_size, 1, -1, 1, window_size, encoding_length))# extract shifted data and adapt dimension
-            #assign a random num_samples index to the positive examples (same across batch for paralle purposes)
-            pos_idxs=np.random.randint(low=0, high=(num_samples-1), size=(num_predic_terms))
+            #3. True patch
+            positive_target=np.zeros((batch_size, num_samples, window_size, encoding_length), dtype=np.int8)-1
+            positive_extracted=inputData[:, next_t: next_t+num_predic_terms]
+            positive_target[:, :positive_extracted.shape[1]]=positive_extracted
+            positive_target=np.reshape(positive_target, (-1, window_size, encoding_length))# (batch*num_predic_terms, window_size, encoding_length)
+            
             #Reset position for positive example to avoid mixing..
-            step_targetData[:, :, :, pos_idxs]=-1
+            negative_target[batch_idxs, positive_idxs]=-1
             #update with positive example
-            step_targetData[:, :, :pos_target.shape[2], pos_idxs]=pos_target
+            negative_target[batch_idxs, positive_idxs]=positive_target
 
-            #Save the positive of positive examples
-            labels[:, i, :, pos_idxs]=1
-
-            targetData[:, i]=step_targetData[:, 0]
+            targetData[:, i]=np.reshape(negative_target, (batch_size, num_predic_terms, num_samples, window_size, encoding_length))
         yield [inputData, targetData], labels
