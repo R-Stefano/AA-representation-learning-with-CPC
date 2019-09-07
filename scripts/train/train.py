@@ -52,6 +52,9 @@ rnn_units=hyperparams['CPC']['rnn_units']
 model_utils=cpc_model.Model()
 model=model_utils.architecture(sequence_length, num_predic_terms, num_samples, window_size, encoding_length, code_size, rnn_units, learning_rate)
 
+train_generator=model_utils.prepareBatch(train_dataset, batch_size)
+test_generator=model_utils.prepareBatch(test_dataset, batch_size)
+
 model_dir=hyperparams['models_dir']+model_utils.name
 log_dir=model_dir+'logs/'
 
@@ -66,10 +69,8 @@ callbacks=[
 ]
 
 model.fit_generator(
-    generator=utils.prepareBatch(train_dataset),
-    steps_per_epoch=len(train_dataset)//batch_size,
-    validation_data=utils.prepareBatch(test_dataset),
-    validation_steps=len(test_dataset)//batch_size,
+    generator=train_generator,
+    validation_data=test_generator,
     epochs=epochs,
     callbacks=callbacks,
     verbose=1
