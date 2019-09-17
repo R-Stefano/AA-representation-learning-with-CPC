@@ -8,24 +8,39 @@ import numpy as np
 
 class Model():
     def __init__(self):
-        self.name='CPC/'
+        self.name='CPC_2/'
 
     def prepareBatch(self, x_set,batch_size):
         return BatchGenerator(x_set, batch_size)
 
     def buildEncoder(self, window_size, encoding_length, code_size):
-        encoder_model = models.Sequential(name='encoder')
 
-        for num_kernels in [32,64,128]:
-            encoder_model.add(layers.Conv1D(num_kernels, 3, activation='linear', input_shape=(window_size, encoding_length)))
-            encoder_model.add(layers.BatchNormalization())
-            encoder_model.add(layers.LeakyReLU())
+        x_input=layers.Input((window_size, encoding_length))
+        
+        x=x_input
+        for num_kernels, _strides in zip([64, 64, 128, 128, 256, 256, 512, 512], [1,2, 1,2, 1,2, 1,2]):
+            shortcut=x
+            x=layers.Conv1D(num_kernels, kernel_size=3, strides=_strides, activation='linear', padding='same')(x)
+            x=layers.BatchNormalization()(x)
+            x=layers.LeakyReLU()(x)
 
-        encoder_model.add(layers.Flatten())
-        encoder_model.add(layers.Dense(units=256, activation='linear'))
-        encoder_model.add(layers.BatchNormalization())
-        encoder_model.add(layers.LeakyReLU())
-        encoder_model.add(layers.Dense(units=code_size, activation='linear', name='encoder_embedding'))
+            x=layers.Conv1D(num_kernels, kernel_size=3, strides=1, activation='linear', padding='same')(x)
+            x=layers.BatchNormalization()(x)
+
+            if (_strides!=1) or (shortcut.shape[-1]!=x.shape[-1]):
+                shortcut=layers.Conv1D(num_kernels, kernel_size=1, strides=_strides, activation='linear', padding='same')(shortcut)
+                shortcut=layers.BatchNormalization()(shortcut)
+
+            x=layers.add([shortcut, x])
+            x=layers.LeakyReLU()(x)
+
+        x=layers.Flatten()(x)
+        x=layers.Dense(units=256, activation='linear')(x)
+        x=layers.BatchNormalization()(x)
+        x=layers.LeakyReLU()(x)
+        output=layers.Dense(units=code_size, activation='linear', name='encoder_embedding')(x)
+
+        encoder_model = models.Model(x_input, output, name='encoder')
 
         return encoder_model
 
@@ -117,7 +132,9 @@ class Model():
             loss=self.custom_xent, #labels come as indexes, not as one hot vectors
             metrics=[self.custom_accuracy]
         )
-        cpc_model.summary()
+
+        #encoder_model.summary()
+        #cpc_model.summary()
 
         return cpc_model
 
@@ -167,11 +184,14 @@ class BatchGenerator(Sequence):
             pads=np.zeros((batch_size, padding, 1), dtype=np.int8)-1
             batch_encoded=np.concatenate((batch_encoded, pads), axis=1)
             
-        inputData=np.zeros((batch_size, sequence_length, window_size, encoding_length), dtype=np.int8)-1
+        inputData=np.zeros((batch_size, sequence_length, window_size, encoding_length))-1
         for i in range(sequence_length):
             patch_start=i*stride
             patch=batch_encoded[:, patch_start: patch_start+window_size]
             inputData[:, i]=patch 
+        
+        #normalize input
+        inputData=inputData/25
 
         targetData=np.zeros((batch_size, sequence_length, num_predic_terms, num_samples,  window_size, encoding_length), dtype=np.int8)-1
         labels=np.zeros((batch_size, sequence_length, num_predic_terms, num_samples), dtype=np.int8)

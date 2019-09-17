@@ -7,8 +7,7 @@ with open('../../hyperparams.yml', 'r') as f:
     hyperparams=yaml.load(f)
 
 sys.path.append(hyperparams['shared_scripts'])
-import cpc as cpc_model
-import utils
+import CPC as cpc_model
 
 #Check if GPU available
 print('\n-----------\n')
@@ -28,8 +27,8 @@ data_dir=hyperparams['data_dir']
 seed=hyperparams['seed']
 
 np.random.seed(seed)
-train_dataset=np.load(data_dir+'train_dataset.npy', allow_pickle=True)
-test_dataset=np.load(data_dir+'test_dataset.npy', allow_pickle=True)
+train_dataset=np.load(data_dir+'train_dataset.npy', allow_pickle=True)[:25]
+test_dataset=np.load(data_dir+'test_dataset.npy', allow_pickle=True)[:25]
 
 sequence_aa=hyperparams['max_sequence_length']
 

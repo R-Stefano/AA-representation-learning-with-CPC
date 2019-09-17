@@ -9,9 +9,9 @@ max_sequence_length: 1078
 min_sequence_length: 0
 training: {
   test_size: 0.22,
-  epochs: 10,
-  batch_size: 64,
-  learning_rate: 0.0001
+  epochs: 2,
+  batch_size: 5,
+  learning_rate: 0.001
 }
 prepare_batch: {
   stride: 34,
