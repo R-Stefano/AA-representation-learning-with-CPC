@@ -7,7 +7,7 @@ with open('../../hyperparams.yml', 'r') as f:
     hyperparams=yaml.load(f)
 
 sys.path.append(hyperparams['shared_scripts'])
-import CPC as cpc_model
+import CPC as model_wrapper
 
 #Check if GPU available
 print('\n-----------\n')
@@ -22,43 +22,26 @@ else:
 print('\n-----------\n')
     
 
-project_dir=hyperparams['project_dir']
 data_dir=hyperparams['data_dir']
-seed=hyperparams['seed']
+models_dir=hyperparams['models_dir']
 
-np.random.seed(seed)
-train_dataset=np.load(data_dir+'train_dataset.npy', allow_pickle=True)[:25]
-test_dataset=np.load(data_dir+'test_dataset.npy', allow_pickle=True)[:25]
+epochs=10
+batch_size=64
 
-sequence_aa=hyperparams['max_sequence_length']
+train_dataset=np.load(data_dir+'dataset/training_30_encoded.npy')[0] #just input data, no labels
+test_dataset=np.load(data_dir+'dataset/validation_encoded.npy')[0] #just input data, no labels
 
-epochs=hyperparams['training']['epochs']
-batch_size=hyperparams['training']['batch_size']
-learning_rate=hyperparams['training']['learning_rate']
+model_utils=model_wrapper.Model(models_dir,'CPC_2')
+model=model_utils.architecture()
 
-stride=hyperparams['prepare_batch']['stride'] #window stride for generating sequence_length patches as input
-padding=hyperparams['prepare_batch']['padding']
-window_size=hyperparams['prepare_batch']['window_size'] # #window size for stride
 
-sequence_length=hyperparams['CPC']['input_sequence_length'] #computed: ((in - w + 2p)/s)+1
-num_predic_terms=hyperparams['CPC']['num_pred_terms']
-num_samples=hyperparams['CPC']['num_samples'] #tot number of samples for each pred
-num_samples_positive=hyperparams['CPC']['num_samples_pos']
-encoding_length=hyperparams['CPC']['encoding_size'] #encoding_length=len(hyperparams['aminos'])
-code_size=hyperparams['CPC']['code_size'] #encoder output vector length
-rnn_units=hyperparams['CPC']['rnn_units']
+train_generator=model_utils.BatchGenerator(train_dataset, batch_size)
+test_generator=model_utils.BatchGenerator(test_dataset, batch_size)
 
-model_utils=cpc_model.Model()
-model=model_utils.architecture(sequence_length, num_predic_terms, num_samples, window_size, encoding_length, code_size, rnn_units, learning_rate)
-
-train_generator=model_utils.prepareBatch(train_dataset, batch_size)
-test_generator=model_utils.prepareBatch(test_dataset, batch_size)
-
-model_dir=hyperparams['models_dir']+model_utils.name
-log_dir=model_dir+'logs/'
+model_dir=model_utils.dir
 
 callbacks=[
-    tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1, profile_batch = 3),
+    tf.keras.callbacks.TensorBoard(log_dir=model_dir+'logs/', histogram_freq=1, profile_batch = 2),
     tf.keras.callbacks.ModelCheckpoint(
         filepath=model_dir+'model.{epoch:02d}-{val_loss:.2f}.hdf5' ,
         monitor='val_custom_accuracy', 
