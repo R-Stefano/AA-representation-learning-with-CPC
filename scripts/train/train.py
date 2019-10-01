@@ -6,8 +6,15 @@ import sys
 with open('../../hyperparams.yml', 'r') as f:
     hyperparams=yaml.load(f)
 
+model_name='Transformer_untrained'
 sys.path.append(hyperparams['shared_scripts'])
-import CPC as model_wrapper
+import Transformer as model_wrapper
+
+data_dir=hyperparams['data_dir']
+models_dir=hyperparams['models_dir']
+
+epochs=hyperparams['epochs']
+batch_size=hyperparams['batch_size']
 
 #Check if GPU available
 print('\n-----------\n')
@@ -20,30 +27,23 @@ if hyperparams['GPU']:
 else:
     print('Using CPU')
 print('\n-----------\n')
-    
 
-data_dir=hyperparams['data_dir']
-models_dir=hyperparams['models_dir']
+train_dataset=np.load(data_dir+'dataset/training_90.npy')
+test_dataset=np.load(data_dir+'dataset/evaluation.npy')
 
-epochs=10
-batch_size=64
-
-train_dataset=np.load(data_dir+'dataset/training_30_encoded.npy')[0] #just input data, no labels
-test_dataset=np.load(data_dir+'dataset/validation_encoded.npy')[0] #just input data, no labels
-
-model_utils=model_wrapper.Model(models_dir,'CPC_2')
+model_utils=model_wrapper.Model(models_dir, model_name)
 model=model_utils.architecture()
+model_dir=model_utils.dir
 
-
+'''
 train_generator=model_utils.BatchGenerator(train_dataset, batch_size)
 test_generator=model_utils.BatchGenerator(test_dataset, batch_size)
 
-model_dir=model_utils.dir
 
 callbacks=[
     tf.keras.callbacks.TensorBoard(log_dir=model_dir+'logs/', histogram_freq=1, profile_batch = 2),
     tf.keras.callbacks.ModelCheckpoint(
-        filepath=model_dir+'model.{epoch:02d}-{val_loss:.2f}.hdf5' ,
+        filepath=model_dir+'model_{epoch:02d}.hdf5' ,
         monitor='val_custom_accuracy', 
         load_weights_on_restart=True, 
         save_best_only=True),
@@ -57,7 +57,7 @@ model.fit_generator(
     callbacks=callbacks,
     verbose=1
 )
-
+'''
 model.save(model_dir+'model.h5')
 model.save_weights(model_dir+'model_weights.h5')
 

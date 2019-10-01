@@ -3,7 +3,5 @@ data_dir: '/home/steve/Desktop/projects/noname/ares_project/data/'
 models_dir: '/home/steve/Desktop/projects/noname/ares_project/data/models/'
 shared_scripts: '/home/steve/Desktop/projects/noname/ares_project/scripts/shared/'
 GPU: False
-aminos: [A, D, T, I, V, E, L, Y, P, N, G, S, H, K, R, W, M, Q, F, C, X, B, U, Z, O]
-max_sequence_length: 1078
-min_sequence_length: 0
-
+batch_size: 64
+epochs: 10

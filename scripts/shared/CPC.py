@@ -12,12 +12,12 @@ class Model():
         self.dir=dir_path+self.name+'/'
 
         self.sequence_length=512
-        self.num_tokens=21
+        self.num_tokens=23
         self.token_embed_size=5
         self.code_size=128
         self.rnn_units=256
         self.num_predic_terms=8
-        self.num_samples=6
+        self.num_samples=4
 
     def BatchGenerator(self, x_set,batch_size):
         return BatchGenerator(x_set, batch_size)
@@ -28,7 +28,7 @@ class Model():
         x=x_input
         for num_kernels, _strides in zip([64, 64, 128, 128, 256], [2,1,2,1, 2]):
             shortcut=x
-            x=layers.Conv1D(num_kernels, kernel_size=3, strides=_strides, activation='linear')(x)
+            x=layers.Conv1D(num_kernels, kernel_size=9, strides=_strides, activation='linear', padding='same')(x)
             x=layers.BatchNormalization()(x)
             x=layers.LeakyReLU()(x)
             '''
@@ -91,7 +91,7 @@ class Model():
     def architecture(self, learning_rate=0.001):
         #Build model parts
         encoder_model=self.buildEncoder()
-        embedder=layers.Embedding(input_dim=self.num_tokens, output_dim=self.token_embed_size)#, mask_zero=True)
+        embedder=layers.Embedding(input_dim=self.num_tokens, output_dim=self.token_embed_size, mask_zero=True)
         autoregressive_model=layers.LSTM(units=self.rnn_units, return_sequences=True, name='rnn')
         predictor_model=self.buildPredictorNetwork()
 
