@@ -6,10 +6,12 @@ from tensorflow.keras.utils import Sequence
 import numpy as np
 
 class Model():
-    def __init__(self, dir_path, model_name):
+    def __init__(self, dir_path, base_model_name, model_name):
         self.name=model_name
-        self.dir=dir_path+self.name+'/'
+        self.base_dir=dir_path+base_model_name+'/'
+        self.dir=dir_path+base_model_name+'/'+model_name+'/'
 
+        self.seq_length=512
         self.num_tokens=22 +1 #+1 for padding
 
         self.labels=8+1
@@ -43,18 +45,15 @@ class Model():
 
         return tf.math.reduce_mean(acc)
 
-    def architecture(self, b_model, learning_rate=0.00001):
-        base_model=tf.keras.Model(
-            inputs=b_model.get_layer('transformer_input').input,
-            outputs=b_model.get_layer('transformer_output').output
-        )
+    def architecture(self, learning_rate=0.00001):
+        base_model=tf.keras.models.load_model(self.base_dir+'model/')
 
         base_model.trainable=False
 
-        x_input=base_model.input
+        x_input=layers.Input((self.seq_length), name='input_layer')
         x=base_model(x_input)
 
-        output=layers.Dense(self.labels, activation='softmax')(x)
+        output=layers.Dense(self.labels, activation='softmax', name='output_layer')(x)
 
         model=tf.keras.Model(
             inputs=x_input,
@@ -70,6 +69,17 @@ class Model():
     def BatchGenerator(self, x_set, y_set, batch_size):
         return BatchGenerator(x_set, y_set, batch_size)
 
+    def exportModel(self, model):
+        for l in model.layers:
+            print(l.name)
+
+        skeleton=models.Model(
+            inputs=model.get_layer('input_layer').input,
+            outputs=model.get_layer('output_layer').output
+        )
+
+        skeleton.save(self.dir+'/model')
+        
 
 class BatchGenerator(Sequence):
     def __init__(self, x_set, y_set, batch_size):

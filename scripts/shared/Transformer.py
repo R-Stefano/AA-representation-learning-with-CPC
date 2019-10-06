@@ -113,6 +113,18 @@ class Model():
     def BatchGenerator(self, x_set, batch_size):
         return BatchGenerator(x_set, batch_size)
 
+    def exportModel(self, model):
+        for l in model.layers:
+            print(l.name)
+
+
+        skeleton=models.Model(
+            inputs=model.get_layer('transformer_input').input,
+            outputs=model.get_layer('encoder_layer').output
+        )
+
+        skeleton.save(self.dir+'/model')
+
 
 class BatchGenerator(Sequence):
     def __init__(self, x_set, batch_size):

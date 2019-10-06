@@ -18,39 +18,34 @@ with open(data_dir+'dataset_config.yaml') as f:
 tokes_voc=dataset_configs['aa_vocabulary']
 max_seq_length=dataset_configs['sequence_length']
 
-sys.path.append(hyperparams['shared_scripts'])
-import CPC as model_wrapper
+validation=np.load(data_dir+'dataset/secondary_structure/validation_sst8.npy')
 
 models_dir=hyperparams['models_dir']
-model_name='CPC' #CPC, CPC_2
+model_base_name='Transformer_untrained'
+model_tuner_name='tuner_secondary'
 
-dataset_embeddings=np.load(data_dir+'embeddings.npy')
-dataset_pdb_ids=np.load(data_dir+'pdb_ids.npy')
+model=tf.keras.models.load_model(models_dir+model_base_name+'/'+model_tuner_name+'/model')
 
-def prepareModel(model_dir, model_name):
-    model_utils=model_wrapper.Model(model_dir, model_name)
-    model=model_utils.architecture()
+batch_size=64
+for b_start in range(0, validation.shape[1], batch_size):
+    b_end=b_start+batch_size
+
+    X=validation[0, b_start:b_end]
+    Y=validation[1, b_start:b_end]
+    print('HELLO')
+    preds=model.predict(X)
+    print(preds.shape)
+    break
+
+    #batch_result=evaluateLabels(Y, preds)
+
+    #evaluate_labels_results.append(batch_result)
+#model.predict(np.random.randint(0, 23, (1, 512)))
 
 
-    custom_objects={
-        'custom_loss':model_utils.custom_loss,
-        'custom_accuracy': model_utils.custom_accuracy
-    }
 
-    print('>Loading {} model'.format(model_name))
-    model=tf.keras.models.load_model(model_dir+model_name+'/model.01-1.98.hdf5', custom_objects=custom_objects)
-    '''
-    model.summary()
-    for layer in model.layers:
-        print(layer.name)
-    '''
 
-    rnn_output=tf.keras.Model(
-        inputs=model.get_layer('encoder_input').input,
-        outputs=model.get_layer('rnn').output
-    )
-    return rnn_output
-
+'''
 def prepareSequence(seq_string):
     print('Encoding sequence..')
     encoded_seq=[tokes_voc['<BOS>']]
@@ -123,3 +118,4 @@ for i, q in enumerate(queries.iterrows()):
 
 
 pd.DataFrame(results).to_csv('results.csv')
+'''

@@ -20,9 +20,11 @@ inputData=np.load(data_dir+'dataset/training_90.npy')[:batch_size]
 evaluationData=np.load(data_dir+'dataset/evaluation.npy')[:batch_size]
 
 model_utils=model_wrapper.Model(hyperparams['models_dir'],'test')
-#model=model_utils.architecture()
+model=model_utils.architecture()
 model_dir=model_utils.dir
 
+model_utils.exportModel(model)
+'''
 #print(model.predict(inputData).shape)
 
 train_generator=model_utils.BatchGenerator(inputData, batch_size)
@@ -35,7 +37,6 @@ for batch in train_generator:
     print('Labels:', y.shape)
     break
 
-'''
 model.fit_generator(
     generator=train_generator,
     validation_data=test_generator,

@@ -6,7 +6,7 @@ import sys
 with open('../../hyperparams.yml', 'r') as f:
     hyperparams=yaml.load(f)
 
-model_name='Transformer_2'
+model_name='Transformer_untrained'
 sys.path.append(hyperparams['shared_scripts'])
 import Transformer as model_wrapper
 
@@ -38,6 +38,7 @@ model_dir=model_utils.dir
 train_generator=model_utils.BatchGenerator(train_dataset, batch_size)
 test_generator=model_utils.BatchGenerator(test_dataset, batch_size)
 
+'''
 callbacks=[
     tf.keras.callbacks.TensorBoard(log_dir=model_dir+'logs/', histogram_freq=1, profile_batch = 2),
     tf.keras.callbacks.ModelCheckpoint(
@@ -57,4 +58,5 @@ model.fit_generator(
 )
 
 model.save(model_dir+'model.h5')
-
+'''
+model_utils.exportModel(model)
