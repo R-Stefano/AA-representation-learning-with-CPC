@@ -54,13 +54,8 @@ class Model():
         #compute loss
         Xentropy=tf.reduce_sum(-y_true_encoded*tf.math.log(y_pred+1e-6), axis=-1)
 
-        print('XENTROPY:')
-        print(Xentropy[0, :20])
-
         #mask loss for padding positions
         Xentropy_masked=tf.math.multiply(Xentropy, mask)
-        print('XENTROPY MASKED:')
-        print(Xentropy_masked[0, :20])
         Xentropy_masked_batch_loss=tf.math.reduce_mean(Xentropy_masked)
 
         return Xentropy_masked_batch_loss
