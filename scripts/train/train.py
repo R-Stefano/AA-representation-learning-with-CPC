@@ -6,7 +6,6 @@ import sys
 with open('../../hyperparams.yml', 'r') as f:
     hyperparams=yaml.load(f)
 
-model_name='Transformer_untrained'
 sys.path.append(hyperparams['shared_scripts'])
 import Transformer as model_wrapper
 
@@ -28,9 +27,10 @@ else:
     print('Using CPU')
 print('\n-----------\n')
 
-train_dataset=np.load(data_dir+'dataset/training_90.npy')
-test_dataset=np.load(data_dir+'dataset/evaluation.npy')
+train_dataset=np.load(data_dir+'dataset/unsupervised/training_90.npy')
+test_dataset=np.load(data_dir+'dataset/unsupervised/evaluation.npy')
 
+model_name='Transformer_untrained'
 model_utils=model_wrapper.Model(models_dir, model_name)
 model=model_utils.architecture()
 model_dir=model_utils.dir
@@ -38,7 +38,6 @@ model_dir=model_utils.dir
 train_generator=model_utils.BatchGenerator(train_dataset, batch_size)
 test_generator=model_utils.BatchGenerator(test_dataset, batch_size)
 
-'''
 callbacks=[
     tf.keras.callbacks.TensorBoard(log_dir=model_dir+'logs/', histogram_freq=1, profile_batch = 2),
     tf.keras.callbacks.ModelCheckpoint(
@@ -57,6 +56,4 @@ model.fit_generator(
     verbose=1
 )
 
-model.save(model_dir+'model.h5')
-'''
 model_utils.exportModel(model)

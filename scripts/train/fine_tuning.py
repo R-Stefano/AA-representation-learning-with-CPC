@@ -11,23 +11,26 @@ model_dir=configs['models_dir']
 
 batch_size=64
 epochs=10
+dataset='sst3'
 
 sys.path.append(configs['shared_scripts'])
 import Transformer_tuner as model_wrapper
 
-train_dataset=np.load(data_dir+'dataset/secondary_structure/training_30_sst8.npy', allow_pickle=True)
-test_dataset=np.load(data_dir+'dataset/secondary_structure/validation_sst8.npy', allow_pickle=True)
-
 base_model_name='Transformer_untrained'
-model_name='tuner_secondary'
+model_name='tuner_secondary_'+dataset
+
+train_dataset=np.load(data_dir+'dataset/secondary_structure/training_'+dataset+'.npy', allow_pickle=True)
+test_dataset=np.load(data_dir+'dataset/secondary_structure/validating_'+dataset+'.npy', allow_pickle=True)
+
+
 
 print('>Loading {} model'.format(base_model_name))
 model_utils=model_wrapper.Model(model_dir, base_model_name, model_name)
 model=model_utils.architecture()
 model_dir=model_utils.dir
 
-train_generator=model.BatchGenerator(train_dataset[0], train_dataset[1], batch_size)
-test_generator=model.BatchGenerator(test_dataset[0], test_dataset[1], batch_size)
+train_generator=model_utils.BatchGenerator(train_dataset[0], train_dataset[1], batch_size)
+test_generator=model_utils.BatchGenerator(test_dataset[0], test_dataset[1], batch_size)
 
 callbacks=[
     tf.keras.callbacks.TensorBoard(log_dir=model_dir+'logs/', histogram_freq=1, profile_batch = 2),
@@ -46,6 +49,5 @@ model.fit_generator(
     callbacks=callbacks,
     verbose=1
 )
-
 
 model_utils.exportModel(model)

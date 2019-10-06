@@ -14,7 +14,7 @@ class Model():
         self.seq_length=512
         self.num_tokens=22 +1 #+1 for padding
 
-        self.labels=8+1
+        self.labels=3+1
 
     def custom_loss(self, y_true, y_pred):
         mask=tf.cast(tf.math.greater(y_true, 0), tf.float32)
