@@ -30,7 +30,7 @@ print('\n-----------\n')
 train_dataset=np.load(data_dir+'dataset/unsupervised/training_90.npy')
 test_dataset=np.load(data_dir+'dataset/unsupervised/evaluation.npy')
 
-model_name='Transformer_untrained'
+model_name='Transformer_1'
 model_utils=model_wrapper.Model(models_dir, model_name)
 model=model_utils.architecture()
 model_dir=model_utils.dir

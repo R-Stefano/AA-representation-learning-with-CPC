@@ -11,7 +11,7 @@ class Model():
         self.dir=dir_path+self.name+'/'
 
         self.seq_length=512
-        self.num_tokens=22 +1 #+1 for padding
+        self.num_tokens=20 +3 #padding, bos, eos, mask
         self.token_embed_size=5
 
         self.d_model=512
@@ -20,6 +20,7 @@ class Model():
         self.layers=1
 
         self.dropout_rate=0.1
+        self.sub_ratio=0.15 #how many elements substitute: mask/random/none
 
     def positional_encoding(self, position, d_model):
         '''
@@ -53,8 +54,13 @@ class Model():
         #compute loss
         Xentropy=tf.reduce_sum(-y_true_encoded*tf.math.log(y_pred+1e-6), axis=-1)
 
+        print('XENTROPY:')
+        print(Xentropy[0, :20])
+
         #mask loss for padding positions
         Xentropy_masked=tf.math.multiply(Xentropy, mask)
+        print('XENTROPY MASKED:')
+        print(Xentropy_masked[0, :20])
         Xentropy_masked_batch_loss=tf.math.reduce_mean(Xentropy_masked)
 
         return Xentropy_masked_batch_loss
@@ -74,10 +80,9 @@ class Model():
 
         return tf.math.reduce_mean(acc)
 
-    def architecture(self, learning_rate=0.001):
-        embedder=layers.Embedding(input_dim=self.num_tokens, output_dim=self.token_embed_size)
+    def architecture(self, learning_rate=0.0001):
+        embedder=layers.Embedding(input_dim=self.num_tokens+1, output_dim=self.token_embed_size)
         x_input=layers.Input((self.seq_length), name='transformer_input')
-
 
         x=embedder(x_input)
 
@@ -111,7 +116,7 @@ class Model():
         return transformer
 
     def BatchGenerator(self, x_set, batch_size):
-        return BatchGenerator(x_set, batch_size)
+        return BatchGenerator(x_set, batch_size, self.sub_ratio)
 
     def exportModel(self, model):
         for l in model.layers:
@@ -127,10 +132,13 @@ class Model():
 
 
 class BatchGenerator(Sequence):
-    def __init__(self, x_set, batch_size):
+    def __init__(self, x_set, batch_size, sub_ratio):
         self.x= x_set
         self.batch_size = batch_size
         self.indices = np.arange(self.x.shape[0])
+        self.sub_ratio=sub_ratio
+        self.mask_idx=23
+
 
     def __len__(self):
         '''
@@ -144,7 +152,35 @@ class BatchGenerator(Sequence):
         inds = self.indices[b_start:b_end]
         batch_x = self.x[inds]
 
-        return batch_x, batch_x
+        ##Get possible indexes to mask: no padding and BOS/EOS
+        mask=batch_x!=0 #True is where it is possible to substitute
+        #tags_mask=batch_x>=21
+        #mask=~(zero_mask+tags_mask) 
+
+        #Get the coordinates in the tensor of available substitutes
+        avail_mask_idxs=np.argwhere(mask) #(N, 2) N: number bases avail to substitute, 2: batch, position 
+
+        #randomly pick the 15%
+        pos_idxs=np.random.choice(np.arange(len(avail_mask_idxs)), int(len(avail_mask_idxs)*self.sub_ratio), replace=False) #get mask_idxs idxs to substitute
+
+        #Get mask idxs
+        substitue_idxs=avail_mask_idxs[pos_idxs]
+
+        #set to 0 all 'labels' except the ones masked
+        batch_y=batch_x*0
+        batch_y[substitue_idxs[:, 0], substitue_idxs[:, 1]]=batch_x[substitue_idxs[:, 0], substitue_idxs[:, 1]]
+
+        np.random.shuffle(substitue_idxs)# shuffle
+        
+        #among 15%: 20 random, 80 mask
+        mask_idxs=substitue_idxs[:int(len(substitue_idxs)*0.8)]
+        random_idxs=substitue_idxs[int(len(substitue_idxs)*0.8):]
+
+        #apply mask to the input
+        batch_x[mask_idxs[:, 0], mask_idxs[:, 1]]=self.mask_idx
+        batch_x[random_idxs[:, 0], random_idxs[:, 1]]=np.random.randint(1, self.mask_idx, (len(random_idxs)))
+
+        return batch_x, batch_y
 
     def on_epoch_end(self):
         '''

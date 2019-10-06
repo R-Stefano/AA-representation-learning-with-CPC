@@ -22,8 +22,6 @@ model_name='tuner_secondary_'+dataset
 train_dataset=np.load(data_dir+'dataset/secondary_structure/training_'+dataset+'.npy', allow_pickle=True)
 test_dataset=np.load(data_dir+'dataset/secondary_structure/validating_'+dataset+'.npy', allow_pickle=True)
 
-
-
 print('>Loading {} model'.format(base_model_name))
 model_utils=model_wrapper.Model(model_dir, base_model_name, model_name)
 model=model_utils.architecture()
