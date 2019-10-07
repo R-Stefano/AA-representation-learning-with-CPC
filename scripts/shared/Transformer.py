@@ -14,10 +14,10 @@ class Model():
         self.num_tokens=20 +3 #padding, bos, eos, mask
         self.token_embed_size=5
 
-        self.d_model=512
-        self.num_heads=8
-        self.dff=2048
-        self.layers=1
+        self.d_model=128
+        self.layers=2
+        self.num_heads=self.d_model//64
+        self.dff=self.d_model*4
 
         self.dropout_rate=0.1
         self.sub_ratio=0.15 #how many elements substitute: mask/random/none
@@ -120,7 +120,7 @@ class Model():
 
         skeleton=models.Model(
             inputs=model.get_layer('transformer_input').input,
-            outputs=model.get_layer('encoder_layer').output
+            outputs=model.get_layer('encoder_layer_'+str(self.layers)).output
         )
 
         skeleton.save(self.dir+'/model')
