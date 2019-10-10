@@ -27,7 +27,7 @@ batch_size=10
 validation=np.load(data_dir+'dataset/secondary_structure/validating_'+dataset+'.npy')
 
 models_dir=hyperparams['models_dir']
-model_base_name='Transformer_untrained'
+model_base_name='Transformer_4'
 model_tuner_name='tuner_secondary_'+dataset
 
 model=tf.keras.models.load_model(models_dir+model_base_name+'/'+model_tuner_name+'/model')

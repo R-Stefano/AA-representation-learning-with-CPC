@@ -2,6 +2,7 @@ import tensorflow as tf
 import numpy as np
 import yaml
 import sys
+import h5py
 
 with open('../../hyperparams.yml', 'r') as f:
     hyperparams=yaml.load(f)
@@ -27,10 +28,13 @@ else:
     print('Using CPU')
 print('\n-----------\n')
 
-train_dataset=np.load(data_dir+'dataset/unsupervised/training_90.npy')
+
+#train_dataset=np.load(data_dir+'dataset/unsupervised_large/sequences/sequences_shard_0.npy')
+train_dataset=h5py.File(data_dir+'test.hdf5', 'r')['sequences']
+print(train_dataset.shape)
 test_dataset=np.load(data_dir+'dataset/unsupervised/evaluation.npy')
 
-model_name='Transformer_1'
+model_name=hyperparams['base_model']
 model_utils=model_wrapper.Model(models_dir, model_name)
 model=model_utils.architecture()
 model_dir=model_utils.dir
@@ -53,7 +57,8 @@ model.fit_generator(
     validation_data=test_generator,
     epochs=epochs,
     callbacks=callbacks,
-    verbose=1
+    verbose=1,
+    use_multiprocessing=True
 )
 
 model_utils.exportModel(model)

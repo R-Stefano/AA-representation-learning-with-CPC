@@ -9,14 +9,14 @@ with open('../../hyperparams.yml', 'r') as f:
 data_dir=configs['data_dir']
 model_dir=configs['models_dir']
 
-batch_size=64
-epochs=10
+epochs=configs['epochs']
+batch_size=configs['batch_size']
 dataset='sst3'
 
 sys.path.append(configs['shared_scripts'])
 import Transformer_tuner as model_wrapper
 
-base_model_name='Transformer_untrained'
+base_model_name=configs['base_model']
 model_name='tuner_secondary_'+dataset
 
 train_dataset=np.load(data_dir+'dataset/secondary_structure/training_'+dataset+'.npy', allow_pickle=True)

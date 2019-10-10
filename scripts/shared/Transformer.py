@@ -11,7 +11,7 @@ class Model():
         self.dir=dir_path+self.name+'/'
 
         self.seq_length=512
-        self.num_tokens=20 +3 #padding, bos, eos, mask
+        self.num_tokens=21 +3 #padding, bos, eos, mask, X aa
         self.token_embed_size=5
 
         self.d_model=128
@@ -111,7 +111,7 @@ class Model():
         return transformer
 
     def BatchGenerator(self, x_set, batch_size):
-        return BatchGenerator(x_set, batch_size, self.sub_ratio)
+        return BatchGenerator(x_set, batch_size, self.sub_ratio, self.num_tokens)
 
     def exportModel(self, model):
         for l in model.layers:
@@ -127,12 +127,12 @@ class Model():
 
 
 class BatchGenerator(Sequence):
-    def __init__(self, x_set, batch_size, sub_ratio):
+    def __init__(self, x_set, batch_size, sub_ratio, num_tokens):
         self.x= x_set
         self.batch_size = batch_size
         self.indices = np.arange(self.x.shape[0])
         self.sub_ratio=sub_ratio
-        self.mask_idx=23
+        self.mask_idx=num_tokens #value for mask token
 
 
     def __len__(self):
@@ -145,12 +145,10 @@ class BatchGenerator(Sequence):
         b_start=idx * self.batch_size
         b_end=(idx + 1) * self.batch_size
         inds = self.indices[b_start:b_end]
-        batch_x = self.x[inds]
+        batch_x = self.x[inds.tolist()]
 
         ##Get possible indexes to mask: no padding and BOS/EOS
         mask=batch_x!=0 #True is where it is possible to substitute
-        #tags_mask=batch_x>=21
-        #mask=~(zero_mask+tags_mask) 
 
         #Get the coordinates in the tensor of available substitutes
         avail_mask_idxs=np.argwhere(mask) #(N, 2) N: number bases avail to substitute, 2: batch, position 
