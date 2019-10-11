@@ -1,5 +1,6 @@
 import urllib.parse
 import urllib.request
+from itertools import islice
 import pandas as pd
 import yaml
 import time
@@ -79,58 +80,35 @@ def batchDataset(clusters_batch):
     return dataset
 
 clusters_file=data_dir+'raw/clusters_uniref_50.txt'
+destination_shard=data_dir+'raw/clusters/'
+dataset=pd.DataFrame()
 
-batch_size=5000
-shard_size=100000
-dataset=pd.DataFrame(columns=['cluster_ref', 'entry_id', 'sequence'])
-clusters=[]
+shard_size=250000
+chunk_size=5000
+chunk_pointer=0
+current_shard=len(os.listdir(destination_shard))
 
-#Compute last cluster shard processed
-processed_shard=0
-for filename in os.listdir(data_dir+'raw/clusters/'):
-    start_idx=filename.rfind('_')
-    end_idx=filename.index('.')
-    shard_number=filename[start_idx+1: end_idx]
-    processed_shard=int(shard_number)
+with open(clusters_file) as f:
+    while True:
+        next_n_lines = list(islice(f, chunk_size))
 
-with open(clusters_file, 'r') as f:
-    time_s=time.time()
-    for idx, line in enumerate(f):
+        #remove new line element
+        clusters=[entry.strip() for entry in next_n_lines]
 
-        #Start after the last cluster saved
-        if (idx)//shard_size>processed_shard:
-            clusters.append(line.strip())
+        time_s=time.time()
+        batch=batchDataset(clusters)
+        chunk_pointer += chunk_size
+        print('Batch ({}/{}) in {:.2f}s'.format(chunk_pointer, '?', time.time()-time_s))
 
-            #Query uniref API
-            if len(clusters)==batch_size:
-                batch=batchDataset(clusters)
-                dataset=dataset.append(batch, ignore_index=True)
-                clusters=[]
-                print('Batch ({}/{}) in {:.2f}s'.format(idx, '?', time.time()-time_s))
-                time_s=time.time()
 
-            #Save on disk to free memory
-            if (idx+1)%shard_size==0:
-                print('Generating shard:', idx//shard_size)
-                batch=batchDataset(clusters)
-                dataset=dataset.append(batch, ignore_index=True)
-                clusters=[]
-                #add cluster id
-                cluster_ids=pd.DataFrame({'cluster_ref': dataset['cluster_ref'].unique()})
-                cluster_ids['cluster_id']=cluster_ids.index.values
+        dataset=pd.concat([dataset, batch], ignore_index=True)
 
-                dataset=dataset.merge(cluster_ids, on='cluster_ref', how='left')
+        if len(dataset)==shard_size:
+            print('Saving shard:', current_shard)
+            dataset.to_csv(destination_shard+'shard_'+str(current_shard)+'.csv', index=False)
+            dataset=pd.DataFrame()
+            current_shard += 1
 
-                dataset.to_csv(data_dir+'raw/clusters/dataset_uniref_50_'+str(idx//shard_size)+'.csv')
-                dataset=pd.DataFrame(columns=['cluster_ref', 'entry_id', 'sequence'])
 
-batch=batchDataset(clusters)
-dataset=dataset.append(batch, ignore_index=True)
-
-#add cluster id
-cluster_ids=pd.DataFrame({'cluster_ref': dataset['cluster_ref'].unique()})
-cluster_ids['cluster_id']=cluster_ids.index.values
-
-dataset=dataset.merge(cluster_ids, on='cluster_ref', how='left')
-
-dataset.to_csv(data_dir+'raw/clusters/dataset_uniref_50_last.csv')
+        if not next_n_lines:
+            break

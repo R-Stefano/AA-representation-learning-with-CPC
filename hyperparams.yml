@@ -3,6 +3,6 @@ data_dir: '/home/steve/Desktop/projects/noname/ares_project/data/'
 models_dir: '/home/steve/Desktop/projects/noname/ares_project/data/models/'
 shared_scripts: '/home/steve/Desktop/projects/noname/ares_project/scripts/shared/'
 GPU: False
-batch_size: 64
-epochs: 10
+batch_size: 128
+epochs: 20
 base_model: 'Transformer_6'

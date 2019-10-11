@@ -29,10 +29,10 @@ else:
 print('\n-----------\n')
 
 
-#train_dataset=np.load(data_dir+'dataset/unsupervised_large/sequences/sequences_shard_0.npy')
-train_dataset=h5py.File(data_dir+'test.hdf5', 'r')['sequences']
+train_dataset=h5py.File(data_dir+'dataset/unsupervised_large/dataset.hdf5', 'r')['sequences']
+test_dataset=np.load(data_dir+'dataset/unsupervised_large/evaluation.npy')
 print(train_dataset.shape)
-test_dataset=np.load(data_dir+'dataset/unsupervised/evaluation.npy')
+print(test_dataset.shape)
 
 model_name=hyperparams['base_model']
 model_utils=model_wrapper.Model(models_dir, model_name)

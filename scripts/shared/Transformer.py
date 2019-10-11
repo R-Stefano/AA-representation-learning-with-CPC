@@ -19,7 +19,7 @@ class Model():
         self.num_heads=self.d_model//64
         self.dff=self.d_model*4
 
-        self.dropout_rate=0.1
+        self.dropout_rate=0.01
         self.sub_ratio=0.15 #how many elements substitute: mask/random/none
 
     def positional_encoding(self, position, d_model):
@@ -75,7 +75,7 @@ class Model():
 
         return tf.math.reduce_mean(acc)
 
-    def architecture(self, learning_rate=0.0001):
+    def architecture(self, learning_rate=0.001):
         embedder=layers.Embedding(input_dim=self.num_tokens+1, output_dim=self.token_embed_size)
         x_input=layers.Input((self.seq_length), name='transformer_input')
 
