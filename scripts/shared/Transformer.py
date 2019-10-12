@@ -145,7 +145,7 @@ class BatchGenerator(Sequence):
         b_start=idx * self.batch_size
         b_end=(idx + 1) * self.batch_size
         inds = self.indices[b_start:b_end]
-        batch_x = self.x[inds.tolist()]
+        batch_x = self.x[np.sort(inds).tolist()]
 
         ##Get possible indexes to mask: no padding and BOS/EOS
         mask=batch_x!=0 #True is where it is possible to substitute

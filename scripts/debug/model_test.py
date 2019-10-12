@@ -18,7 +18,7 @@ sequence_length=512
 
 import h5py
 
-train_dataset=h5py.File(data_dir+'test.hdf5', 'r')['sequences'][:batch_size*5]
+train_dataset=h5py.File(data_dir+'dataset/unsupervised_large_clusters/dataset.hdf5', 'r')['sequences'][:batch_size*5]
 print(train_dataset.shape)
 
 model_utils=model_wrapper.Model(hyperparams['models_dir'],'test')
