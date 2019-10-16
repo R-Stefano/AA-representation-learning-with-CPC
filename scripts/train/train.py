@@ -29,8 +29,8 @@ else:
 print('\n-----------\n')
 
 
-train_dataset=h5py.File(data_dir+'dataset/unsupervised_large/dataset.hdf5', 'r')['sequences']
-test_dataset=np.load(data_dir+'dataset/unsupervised_large/evaluation.npy')
+train_dataset=h5py.File(data_dir+'dataset/unsupervised_large/train_dataset.hdf5', 'r')['sequences']
+test_dataset=h5py.File(data_dir+'dataset/unsupervised_large/validation_dataset.hdf5', 'r')['sequences']
 print(train_dataset.shape)
 print(test_dataset.shape)
 
