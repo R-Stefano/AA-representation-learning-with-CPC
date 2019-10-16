@@ -14,9 +14,9 @@ class Model():
         self.num_tokens=21 +3 #padding, bos, eos, mask, X aa
         self.token_embed_size=5
 
-        self.d_model=128
-        self.layers=6
-        self.num_heads=self.d_model//64
+        self.d_model=32
+        self.layers=1
+        self.num_heads=self.d_model//16
         self.dff=self.d_model*4
 
         self.dropout_rate=0.01

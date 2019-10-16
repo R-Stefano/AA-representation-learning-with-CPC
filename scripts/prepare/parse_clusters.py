@@ -33,22 +33,27 @@ def batchDataset(clusters_batch):
 
     data = urllib.parse.urlencode(params)
     data = data.encode('utf-8')
-    req = urllib.request.Request(url, data)
+    for _ in range(100):
+        try:
+            req = urllib.request.Request(url, data)
 
-    with urllib.request.urlopen(req) as f:
-        response = f.read()
-        response=response.decode('utf-8')
+            with urllib.request.urlopen(req) as f:
+                response = f.read()
+                response=response.decode('utf-8')
 
-        for idx, l in enumerate(response.split('\n')):
-            if idx==0 or len(l)==0: #skip first and last line
-                continue
+                for idx, l in enumerate(response.split('\n')):
+                    if idx==0 or len(l)==0: #skip first and last line
+                        continue
 
-            line_split=l.split()
-            entry_id=line_split[0]
-            cluster_ref=line_split[-1]
+                    line_split=l.split()
+                    entry_id=line_split[0]
+                    cluster_ref=line_split[-1]
 
-            cluster_entries['entry_id'].append(entry_id)
-            cluster_entries['cluster_ref'].append(cluster_ref)
+                    cluster_entries['entry_id'].append(entry_id)
+                    cluster_entries['cluster_ref'].append(cluster_ref)
+            break
+        except:
+            print('No response, trying again to retrieve proteins id in clusters..')
 
     params = {
         'from': 'ACC',
@@ -60,18 +65,23 @@ def batchDataset(clusters_batch):
 
     data = urllib.parse.urlencode(params)
     data = data.encode('utf-8')
-    req = urllib.request.Request(url, data)
 
-    with urllib.request.urlopen(req) as f:
-        response = f.read()
-        response=response.decode('utf-8')
-        for idx, l in enumerate(response.split('\n')):
-            if idx==0 or len(l)==0: #skip first and last line
-                continue
+    for _ in range(100):
+        try:
+            req = urllib.request.Request(url, data)
 
-            line_split=l.split()
-            cluster_seqs['sequence'].append(line_split[0])
-            cluster_seqs['entry_id'].append(line_split[1])
+            with urllib.request.urlopen(req) as f:
+                response = f.read()
+                response=response.decode('utf-8')
+                for idx, l in enumerate(response.split('\n')):
+                    if idx==0 or len(l)==0: #skip first and last line
+                        continue
+
+                    line_split=l.split()
+                    cluster_seqs['sequence'].append(line_split[0])
+                    cluster_seqs['entry_id'].append(line_split[1])
+        except:
+            print('No response, trying again to retrieve proteins sequences..')
 
     cluster_seqs=pd.DataFrame(cluster_seqs)
     cluster_entries=pd.DataFrame(cluster_entries)
@@ -83,32 +93,31 @@ clusters_file=data_dir+'raw/clusters_uniref_50.txt'
 destination_shard=data_dir+'raw/clusters/'
 dataset=pd.DataFrame()
 
-shard_size=250000
-chunk_size=5000
-chunk_pointer=0
 current_shard=len(os.listdir(destination_shard))
 
 with open(clusters_file) as f:
+    b_shard=0
     while True:
-        next_n_lines = list(islice(f, chunk_size))
+        next_n_lines = list(islice(f, 5000))
 
         #remove new line element
         clusters=[entry.strip() for entry in next_n_lines]
+        
+        if b_shard>=current_shard:
 
-        time_s=time.time()
-        batch=batchDataset(clusters)
-        chunk_pointer += chunk_size
-        print('Batch ({}/{}) in {:.2f}s'.format(chunk_pointer, '?', time.time()-time_s))
+            time_s=time.time()
+            batch=batchDataset(clusters)
 
+            dataset=pd.concat([dataset, batch], ignore_index=True)
 
-        dataset=pd.concat([dataset, batch], ignore_index=True)
-
-        if len(dataset)==shard_size:
-            print('Saving shard:', current_shard)
-            dataset.to_csv(destination_shard+'shard_'+str(current_shard)+'.csv', index=False)
+            print('Saving shard: {} in {:.3f}s'.format(b_shard, time.time()-time_s))
+            dataset.to_csv(destination_shard+'shard_'+str(b_shard)+'.csv', index=False)
+            time_s=time.time()
             dataset=pd.DataFrame()
-            current_shard += 1
-
+        else:
+            print('Skipping shard', b_shard)
+        
+        b_shard += 1
 
         if not next_n_lines:
             break
