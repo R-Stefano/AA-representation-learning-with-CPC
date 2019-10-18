@@ -195,9 +195,8 @@ class BatchGenerator(Sequence):
         #target_batch=target_batch[:, columns_idxs]
 
         return [batch_data, target_batch], batch_data
-
+    '''
     def on_epoch_end(self):
-        '''
-        Called at the end of the epoch
-        '''
+        #Called at the end of the epoch
         np.random.shuffle(self.indices)
+    '''

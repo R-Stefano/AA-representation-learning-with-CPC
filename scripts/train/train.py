@@ -8,7 +8,7 @@ with open('../../hyperparams.yml', 'r') as f:
     hyperparams=yaml.load(f)
 
 sys.path.append(hyperparams['shared_scripts'])
-import Transformer as model_wrapper
+import CPC as model_wrapper
 
 data_dir=hyperparams['data_dir']
 models_dir=hyperparams['models_dir']
