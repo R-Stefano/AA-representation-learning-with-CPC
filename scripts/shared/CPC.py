@@ -12,7 +12,7 @@ class Model():
         self.dir=dir_path+self.name+'/'
 
         self.sequence_length=512
-        self.num_tokens=23
+        self.num_tokens=23+1
         self.token_embed_size=5
         self.code_size=128
         self.rnn_units=256
@@ -181,13 +181,11 @@ class BatchGenerator(Sequence):
         b_start=idx * self.batch_size
         b_end=(idx + 1) * self.batch_size
         inds = self.indices[b_start:b_end]
-        batch_data = self.x[inds]
-
-
+        batch_data = self.x[inds.tolist()]
 
         #shuffle examples
-        np.random.shuffle(inds)
-        target_batch=self.x[inds]
+        target_batch=batch_data.copy()
+        np.random.shuffle(target_batch)
 
         #shuffle columns
         #columns_idxs=np.arange(self.x[0].shape[-1])
