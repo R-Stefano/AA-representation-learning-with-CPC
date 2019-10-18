@@ -184,9 +184,9 @@ class BatchGenerator(Sequence):
         batch_data = self.x[inds.tolist()]
 
         #shuffle examples
-        target_batch=batch_data.copy()
-        np.random.shuffle(target_batch)
-
+        target_idxs=np.random.choice(self.indices, self.batch_size, replace=False)
+        target_batch=self.x[np.sort(target_idxs).tolist()]
+        
         #shuffle columns
         #columns_idxs=np.arange(self.x[0].shape[-1])
         #np.random.shuffle(columns_idxs)
