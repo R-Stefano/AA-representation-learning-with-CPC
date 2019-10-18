@@ -14,7 +14,7 @@ batch_size=configs['batch_size']
 dataset='sst3'
 
 sys.path.append(configs['shared_scripts'])
-import Transformer_tuner as model_wrapper
+import tuner as model_wrapper
 
 base_model_name=configs['base_model']
 model_name='tuner_secondary_'+dataset
@@ -29,6 +29,7 @@ model_dir=model_utils.dir
 
 train_generator=model_utils.BatchGenerator(train_dataset[0], train_dataset[1], batch_size)
 test_generator=model_utils.BatchGenerator(test_dataset[0], test_dataset[1], batch_size)
+
 
 callbacks=[
     tf.keras.callbacks.TensorBoard(log_dir=model_dir+'logs/', histogram_freq=1, profile_batch = 2),

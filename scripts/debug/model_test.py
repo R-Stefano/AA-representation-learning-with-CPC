@@ -8,20 +8,20 @@ with open('../../hyperparams.yml', 'r') as f:
 data_dir=hyperparams['data_dir']
 
 sys.path.append(hyperparams['shared_scripts'])
-import Transformer as model_wrapper 
+import CPC as model_wrapper 
 
-#np.random.seed(0)
+np.random.seed(0)
 tf.random.set_seed(0)
 
-batch_size=12
+batch_size=5
 sequence_length=512
 
 import h5py
 
-train_dataset=h5py.File(data_dir+'dataset/unsupervised_large_clusters/dataset.hdf5', 'r')['sequences'][:batch_size*5]
+train_dataset=h5py.File(data_dir+'dataset/unsupervised_large_clusters/train_dataset.hdf5', 'r')['sequences'][:batch_size]
 print(train_dataset.shape)
 
-model_utils=model_wrapper.Model(hyperparams['models_dir'],'test')
+model_utils=model_wrapper.Model(hyperparams['models_dir'],'CPC_untrained')
 model=model_utils.architecture()
 model_dir=model_utils.dir
 
@@ -30,19 +30,9 @@ model_dir=model_utils.dir
 
 train_generator=model_utils.BatchGenerator(train_dataset, batch_size)
 test_generator=model_utils.BatchGenerator(train_dataset, batch_size)
-'''
-for batch in train_generator:
-    x=batch[0]
-    y=batch[1]
-    test=batch[2]
-    print('Original oinput:')
-    print(test[0][:30])
-    print('Input:')
-    print(x[0][:30])
-    print('Labels:')
-    print(y[0][:30])
-    break
-'''
+
+#model_utils.exportModel(model)
+
 model.fit_generator(
     generator=train_generator,
     validation_data=test_generator,

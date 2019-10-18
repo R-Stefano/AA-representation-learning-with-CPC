@@ -15,7 +15,7 @@ class Model():
         self.token_embed_size=5
 
         self.d_model=32
-        self.layers=1
+        self.layers=2
         self.num_heads=self.d_model//16
         self.dff=self.d_model*4
 
@@ -120,7 +120,7 @@ class Model():
 
         skeleton=models.Model(
             inputs=model.get_layer('transformer_input').input,
-            outputs=model.get_layer('encoder_layer_'+str(self.layers-1)).output
+            outputs=model.get_layer('encoder_layer').output#_'+str(self.layers-1)).output
         )
 
         skeleton.save(self.dir+'/model')

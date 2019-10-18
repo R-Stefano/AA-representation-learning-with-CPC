@@ -26,23 +26,8 @@ class Model():
         x_input=layers.Input((self.sequence_length, self.token_embed_size))
         
         x=x_input
-        for num_kernels, _strides in zip([64, 64, 128, 128, 256], [2,1,2,1, 2]):
-            shortcut=x
-            x=layers.Conv1D(num_kernels, kernel_size=9, strides=_strides, activation='linear', padding='same')(x)
-            x=layers.BatchNormalization()(x)
-            x=layers.LeakyReLU()(x)
-            '''
-            x=layers.Conv1D(num_kernels, kernel_size=3, strides=1, activation='linear', padding='same')(x)
-            x=layers.BatchNormalization()(x)
 
-            if (_strides!=1) or (shortcut.shape[-1]!=x.shape[-1]):
-                shortcut=layers.Conv1D(num_kernels, kernel_size=1, strides=_strides, activation='linear', padding='same')(shortcut)
-                shortcut=layers.BatchNormalization()(shortcut)
-
-            x=layers.add([shortcut, x])
-            x=layers.LeakyReLU()(x)
-            '''
-        output=layers.Conv1D(self.code_size, kernel_size=1, strides=1, activation='linear', name='encoder_embedding')(x)
+        output=layers.Conv1D(self.code_size, kernel_size=9, strides=1, activation='linear', padding='same')(x)
 
         encoder_model = models.Model(x_input, output, name='encoder')
 
@@ -66,18 +51,25 @@ class Model():
 
         return predictor_model
 
-    def custom_loss(self, _, y_pred):
+    def custom_loss(self, y_true, y_pred):
+        mask=tf.expand_dims(tf.cast(tf.math.greater(y_true, 0), tf.float32), axis=-1)
+
         labels=tf.expand_dims(tf.ones_like(y_pred[:, :, :, 0]), axis=-1)
         labels=tf.pad(labels, ((0,0), (0,0), (0,0), (0, self.num_samples-1)), "CONSTANT")
+
 
         losses=tf.keras.losses.categorical_crossentropy(
             labels,
             y_pred
         ) #batch, timesteps, predictions
 
-        return tf.math.reduce_mean(losses)
+        loss_masked=tf.math.multiply(losses, mask)
 
-    def custom_accuracy(self, _, y_pred):
+        return tf.math.reduce_mean(loss_masked)
+
+    def custom_accuracy(self, y_true, y_pred):
+        mask=tf.cast(tf.math.greater(y_true, 0), tf.float32)
+
         labels=tf.expand_dims(tf.ones_like(y_pred[:, :, :, 0]), axis=-1)
         labels=tf.pad(labels, ((0,0), (0,0), (0,0), (0, self.num_samples-1)), "CONSTANT")
 
@@ -86,9 +78,14 @@ class Model():
             y_pred
         ) #batch, timesteps, predictions
 
+        acc=tf.math.reduce_mean(acc, axis=-1)
+
+        #problem applying mask: during compiling y_true has shape (None,None,None,None)
+        #then during executing it has shape (None, 512)..
+        #masked_acc=tf.boolean_mask(acc, mask)
         return tf.math.reduce_mean(acc)
 
-    def architecture(self, learning_rate=0.001):
+    def architecture(self, learning_rate=0.0004):
         #Build model parts
         encoder_model=self.buildEncoder()
         embedder=layers.Embedding(input_dim=self.num_tokens, output_dim=self.token_embed_size, mask_zero=True)
@@ -152,10 +149,21 @@ class Model():
             metrics=[self.custom_accuracy]
         )
 
-        #encoder_model.summary()
-        #cpc_model.summary()
+        encoder_model.summary()
+        cpc.summary()
 
         return cpc
+
+    def exportModel(self, model):
+        for l in model.layers:
+            print(l.name)
+
+        skeleton=models.Model(
+            inputs=model.get_layer('encoder_input').input,
+            outputs=model.get_layer('rnn').output
+        )
+
+        skeleton.save(self.dir+'/model')
 
 class BatchGenerator(Sequence):
     def __init__(self, x_set, batch_size):
@@ -175,9 +183,16 @@ class BatchGenerator(Sequence):
         inds = self.indices[b_start:b_end]
         batch_data = self.x[inds]
 
-        np.random.shuffle(inds)
 
+
+        #shuffle examples
+        np.random.shuffle(inds)
         target_batch=self.x[inds]
+
+        #shuffle columns
+        #columns_idxs=np.arange(self.x[0].shape[-1])
+        #np.random.shuffle(columns_idxs)
+        #target_batch=target_batch[:, columns_idxs]
 
         return [batch_data, target_batch], batch_data
 

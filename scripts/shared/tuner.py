@@ -12,7 +12,6 @@ class Model():
         self.dir=dir_path+base_model_name+'/'+model_name+'/'
 
         self.seq_length=512
-        self.num_tokens=22 +1 #+1 for padding
 
         self.labels=3+1
 
@@ -51,6 +50,7 @@ class Model():
         base_model.trainable=False
 
         x_input=layers.Input((self.seq_length), name='input_layer')
+
         x=base_model(x_input)
 
         output=layers.Dense(self.labels, activation='softmax', name='output_layer')(x)
@@ -64,6 +64,8 @@ class Model():
             loss=self.custom_loss,
             metrics=[self.custom_accuracy]
         )
+
+        model.summary()
         return model
 
     def BatchGenerator(self, x_set, y_set, batch_size):

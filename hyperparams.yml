@@ -5,4 +5,4 @@ shared_scripts: '/home/steve/Desktop/projects/noname/ares_project/scripts/shared
 GPU: False
 batch_size: 128
 epochs: 20
-base_model: 'Transformer_6'
+base_model: 'CPC_v1'
