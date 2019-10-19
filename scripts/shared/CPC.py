@@ -63,24 +63,23 @@ class Model():
         ) #batch, timesteps, predictions
 
         loss_masked=tf.math.multiply(losses, mask)
+        
         return tf.math.reduce_mean(loss_masked)
 
     def custom_accuracy(self, y_true, y_pred):
-        mask=tf.cast(tf.math.greater(y_true, 0), tf.float32)
+        mask=tf.math.greater(y_true, 0)
 
         labels=tf.expand_dims(tf.ones_like(y_pred[:, :, :, 0]), axis=-1)
         labels=tf.pad(labels, ((0,0), (0,0), (0,0), (0, self.num_samples-1)), "CONSTANT")
 
+        masked_labels=labels[mask]
+        masked_preds=y_pred[mask]
+
         acc=tf.keras.metrics.categorical_accuracy(
-            labels,
-            y_pred
+            masked_labels,
+            masked_preds
         ) #batch, timesteps, predictions
 
-        acc=tf.math.reduce_mean(acc, axis=-1)
-
-        #problem applying mask: during compiling y_true has shape (None,None,None,None)
-        #then during executing it has shape (None, 512)..
-        #masked_acc=tf.boolean_mask(acc, mask)
         return tf.math.reduce_mean(acc)
 
     def architecture(self, learning_rate=0.0004):

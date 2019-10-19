@@ -13,7 +13,7 @@ import CPC as model_wrapper
 np.random.seed(0)
 tf.random.set_seed(0)
 
-batch_size=64
+batch_size=2
 sequence_length=512
 
 import h5py
