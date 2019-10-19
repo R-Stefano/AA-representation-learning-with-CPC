@@ -35,17 +35,16 @@ class Model():
 
     def buildPredictorNetwork(self):
         #Define predictor network
+        dense_layers=[]
+        for i in range(self.num_predic_terms):
+            dense_layers.append(layers.Dense(units=self.code_size, activation="linear", name='z_t_{i}'.format(i=i)))
+
         context_input=layers.Input((self.rnn_units))
 
         outputs = []
-        for i in range(self.num_predic_terms):
-            outputs.append(layers.Dense(units=self.code_size, activation="linear", name='z_t_{i}'.format(i=i))(context_input))
-
-        def stack_outputs(x):
-            import tensorflow as tf
-            return tf.stack(x, axis=1)
-
-        output=layers.Lambda(stack_outputs)(outputs)
+        for layer in dense_layers:
+            outputs.append(tf.expand_dims(layer(context_input), axis=1))
+        output=layers.concatenate(outputs, axis=1)
 
         predictor_model = models.Model(context_input, output, name='predictor')
 
@@ -64,7 +63,6 @@ class Model():
         ) #batch, timesteps, predictions
 
         loss_masked=tf.math.multiply(losses, mask)
-
         return tf.math.reduce_mean(loss_masked)
 
     def custom_accuracy(self, y_true, y_pred):
@@ -98,10 +96,10 @@ class Model():
 
         x_encoded=encoder_model(x)#batch, timesteps, code_size
         rnn_output=autoregressive_model(x_encoded) #batch, timesteps, rnn_units
-
         #Predict next N code_size at each timestep
-        preds=layers.TimeDistributed(predictor_model)(rnn_output) # batch, timesteps, num_preds, code_size
-        
+        preds=predictor_model(rnn_output) # batch, timesteps, num_preds, code_size
+        preds=tf.transpose(preds, (0, 2, 1, 3))
+
         #>>TARGET TRUE: [batch, timesteps, num_preds, code_size] (shifted by 1 timestep ahead)
         #Helper to gather true targets
         padded_x_encoded=tf.pad(x_encoded, ((0,0), (0, self.num_predic_terms), (0,0)), "CONSTANT")
@@ -129,7 +127,7 @@ class Model():
             idxs.append(tf.random.uniform(shape=[n_samples], minval=0, maxval=y_encoded.shape[1], dtype=tf.int32))
         idxs=tf.reshape(tf.stack(idxs), [-1])
         fake_targets=tf.reshape(tf.gather(y_encoded, idxs, axis=1), (-1, y_encoded.shape[1], self.num_predic_terms, (self.num_samples-1), self.code_size))
-
+        
         expanded_preds=tf.expand_dims(preds, axis=-2)
         targets=tf.concat([true_targets, fake_targets], axis=-2)
 
@@ -181,7 +179,7 @@ class BatchGenerator(Sequence):
         b_start=idx * self.batch_size
         b_end=(idx + 1) * self.batch_size
         inds = self.indices[b_start:b_end]
-        batch_data = self.x[inds.tolist()]
+        batch_data =self.x[inds.tolist()]
 
         #shuffle examples
         target_idxs=np.random.choice(self.indices, self.batch_size, replace=False)

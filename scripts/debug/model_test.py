@@ -13,12 +13,12 @@ import CPC as model_wrapper
 np.random.seed(0)
 tf.random.set_seed(0)
 
-batch_size=5
+batch_size=64
 sequence_length=512
 
 import h5py
 
-train_dataset=h5py.File(data_dir+'dataset/unsupervised_large_clusters/train_dataset.hdf5', 'r')['sequences'][:batch_size]
+train_dataset=h5py.File(data_dir+'dataset/unsupervised_large/train_dataset.hdf5', 'r')['sequences'][:batch_size]
 print(train_dataset.shape)
 
 model_utils=model_wrapper.Model(hyperparams['models_dir'],'CPC_untrained')
