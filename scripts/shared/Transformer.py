@@ -123,7 +123,7 @@ class Model():
             outputs=model.get_layer('encoder_'+str(self.layers-1)).output
         )
 
-        skeleton.save(self.dir+'/model')
+        skeleton.save(self.dir+'/model.h5')
 
 
 class BatchGenerator(Sequence):
