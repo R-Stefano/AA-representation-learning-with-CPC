@@ -14,6 +14,8 @@ class Model():
         self.sequence_length=512
         self.num_tokens=23+1
         self.token_embed_size=5
+        self.embeddings_window=9 #size of window for each AA during encoder conv
+        self.shift=(self.embeddings_window-1)//2 #how much shifting the predictions ahead to avoid network cheating
         self.code_size=128
         self.rnn_units=256
         self.num_predic_terms=8
@@ -27,7 +29,7 @@ class Model():
         
         x=x_input
 
-        output=layers.Conv1D(self.code_size, kernel_size=9, strides=1, activation='linear', padding='same')(x)
+        output=layers.Conv1D(self.code_size, kernel_size=self.embeddings_window, strides=1, activation='linear', padding='same')(x)
 
         encoder_model = models.Model(x_input, output, name='encoder')
 
@@ -101,11 +103,11 @@ class Model():
 
         #>>TARGET TRUE: [batch, timesteps, num_preds, code_size] (shifted by 1 timestep ahead)
         #Helper to gather true targets
-        padded_x_encoded=tf.pad(x_encoded, ((0,0), (0, self.num_predic_terms), (0,0)), "CONSTANT")
+        padded_x_encoded=tf.pad(x_encoded, ((0,0), (0, self.num_predic_terms+self.shift), (0,0)), "CONSTANT")
 
         #gather timestep idxs to retrieve in the exact order: [2,3,4], [3,4,5] ..
         idxs=[]
-        for i in range(1, preds.shape[1]+1):
+        for i in range(self.shift, preds.shape[1]+self.shift):
             idxs.append(tf.range(i, i+self.num_predic_terms))
         idxs=tf.reshape(tf.stack(idxs), [-1])
 
