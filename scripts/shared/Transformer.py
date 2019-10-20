@@ -120,7 +120,7 @@ class Model():
 
         skeleton=models.Model(
             inputs=model.get_layer('transformer_input').input,
-            outputs=model.get_layer('encoder_layer').output#_'+str(self.layers-1)).output
+            outputs=model.get_layer('encoder_'+str(self.layers-1)).output
         )
 
         skeleton.save(self.dir+'/model')

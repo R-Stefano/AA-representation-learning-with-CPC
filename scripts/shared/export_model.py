@@ -8,13 +8,13 @@ with open('../../hyperparams.yml', 'r') as f:
 data_dir=hyperparams['data_dir']
 
 sys.path.append(hyperparams['shared_scripts'])
-import Transformer as model_wrapper
+import CPC as model_wrapper
 
-model_name='Transformer_2'
+model_name='CPC_v1'
 base_dir=data_dir+'models/'+model_name+'/'
 base_model_utils=model_wrapper.Model(data_dir+'models/', model_name)
 
 model=base_model_utils.architecture()
-model.load_weights(base_dir+'model_26.hdf5')
+model.load_weights(base_dir+'model_04.hdf5')
 
 base_model_utils.exportModel(model)

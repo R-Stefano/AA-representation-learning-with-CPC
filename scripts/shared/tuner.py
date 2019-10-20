@@ -45,8 +45,7 @@ class Model():
         return tf.math.reduce_mean(acc)
 
     def architecture(self, learning_rate=0.00001):
-        base_model=tf.keras.models.load_model(self.base_dir+'model/')
-
+        base_model=tf.keras.models.load_model(self.base_dir+'model.h5')
         base_model.trainable=False
 
         x_input=layers.Input((self.seq_length), name='input_layer')

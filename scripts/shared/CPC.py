@@ -88,7 +88,6 @@ class Model():
         #Build model parts
         encoder_model=self.buildEncoder()
         embedder=layers.Embedding(input_dim=self.num_tokens, output_dim=self.token_embed_size, mask_zero=True)
-        autoregressive_model=layers.LSTM(units=self.rnn_units, return_sequences=True, name='rnn')
         predictor_model=self.buildPredictorNetwork()
 
         ##1. Process Input Data
@@ -96,7 +95,7 @@ class Model():
         x=embedder(x_input)
 
         x_encoded=encoder_model(x)#batch, timesteps, code_size
-        rnn_output=autoregressive_model(x_encoded) #batch, timesteps, rnn_units
+        rnn_output=layers.LSTM(units=self.rnn_units, return_sequences=True, name='rnn')(x_encoded) #batch, timesteps, rnn_units
         #Predict next N code_size at each timestep
         preds=predictor_model(rnn_output) # batch, timesteps, num_preds, code_size
         preds=tf.transpose(preds, (0, 2, 1, 3))
@@ -162,7 +161,7 @@ class Model():
             outputs=model.get_layer('rnn').output
         )
 
-        skeleton.save(self.dir+'/model')
+        skeleton.save(self.dir+'/model.h5')
 
 class BatchGenerator(Sequence):
     def __init__(self, x_set, batch_size):

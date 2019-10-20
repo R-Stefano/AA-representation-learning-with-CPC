@@ -41,7 +41,7 @@ model_dir=model_utils.dir
 
 train_generator=model_utils.BatchGenerator(train_dataset, batch_size)
 test_generator=model_utils.BatchGenerator(test_dataset, batch_size)
-
+'''
 callbacks=[
     tf.keras.callbacks.TensorBoard(log_dir=model_dir+'logs/', histogram_freq=1, profile_batch = 2),
     tf.keras.callbacks.ModelCheckpoint(
@@ -60,5 +60,5 @@ model.fit_generator(
     verbose=1,
     use_multiprocessing=True
 )
-
+'''
 model_utils.exportModel(model)
