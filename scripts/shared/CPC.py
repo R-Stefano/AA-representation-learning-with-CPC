@@ -14,7 +14,7 @@ class Model():
         self.sequence_length=512
         self.num_tokens=23+1
         self.token_embed_size=5
-        self.embeddings_window=9 #size of window for each AA during encoder conv
+        self.embeddings_window=49 #size of window for each AA during encoder conv
         self.shift=(self.embeddings_window-1)//2 #how much shifting the predictions ahead to avoid network cheating
         self.code_size=128
         self.rnn_units=256
@@ -29,6 +29,8 @@ class Model():
         
         x=x_input
 
+        x=layers.Conv1D(32, kernel_size=self.embeddings_window, strides=1, activation='relu', padding='same')(x)
+        x=layers.Conv1D(64, kernel_size=self.embeddings_window, strides=1, activation='relu', padding='same')(x)
         output=layers.Conv1D(self.code_size, kernel_size=self.embeddings_window, strides=1, activation='linear', padding='same')(x)
 
         encoder_model = models.Model(x_input, output, name='encoder')

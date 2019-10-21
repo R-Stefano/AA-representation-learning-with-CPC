@@ -45,8 +45,8 @@ model.fit_generator(
     generator=train_generator,
     validation_data=test_generator,
     epochs=epochs,
-    callbacks=callbacks,
+    #callbacks=callbacks,
     verbose=1
 )
 
-model_utils.exportModel(model)
+#model_utils.exportModel(model)

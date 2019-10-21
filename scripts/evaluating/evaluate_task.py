@@ -5,8 +5,6 @@ import numpy as np
 import pickle
 import pandas as pd
 
-import query_API as api
-
 with open('../../hyperparams.yml', 'r') as f:
     hyperparams=yaml.load(f)
 
@@ -22,12 +20,12 @@ dataset='sst3'
 labels_voc=list(dataset_configs['secondary_task'][dataset].keys())[1:]
 print(labels_voc)
 labels=len(labels_voc)
-batch_size=10
+batch_size=32
 
 validation=np.load(data_dir+'dataset/secondary_structure/validating_'+dataset+'.npy')
 
 models_dir=hyperparams['models_dir']
-model_base_name='Transformer_4'
+model_base_name='Transformer_2'
 model_tuner_name='tuner_secondary_'+dataset
 
 model=tf.keras.models.load_model(models_dir+model_base_name+'/'+model_tuner_name+'/model')
